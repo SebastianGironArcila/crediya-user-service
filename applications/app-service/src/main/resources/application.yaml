@@ -1,0 +1,41 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: "Authentication"
+  devtools:
+    add-properties: false
+  h2:
+    console:
+      enabled: false
+      path: "/h2"
+  profiles:
+    include: null
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,prometheus"
+  endpoint:
+    health:
+      probes:
+        enabled: true
+cors:
+  allowed-origins: "http://localhost:4200,http://localhost:8080"
+adapters:
+  postgres:
+    database: "crediya"
+    host: "localhost"
+    port: 5432
+    username: "postgres"
+    password: "postgres"
+    schema: "public"
+    pool:
+      initial-size: 12
+      max-size: 15
+      max-idle-time: 10
+springdoc:
+  api-docs:
+    path: "/api-docs"
+  swagger-ui:
+    path: "/swagger-ui"
