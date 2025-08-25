@@ -16,11 +16,12 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {UserRouterRest.class, UserHandler.class})
+@ContextConfiguration(classes = {UserRouterRest.class, UserHandler.class, ValidationHandler.class})
 @WebFluxTest
 @Import({CorsConfig.class, SecurityHeadersConfig.class})
 class ConfigTest {
@@ -40,13 +41,15 @@ class ConfigTest {
     @BeforeEach
     void setUp() {
         createUserDTO = new CreateUserDTO(
-                "Dahiana",
-                "Reyes",
-                LocalDate.of(1990, 8, 23),
+                "Juan",
+                "Pérez",
+                LocalDate.of(1990, 1, 1),
                 "Calle 123",
                 "3001234567",
-                "dahiana@example.com",
-                2000.0
+                "juan.perez@test.com",
+                "100200300",
+                BigDecimal.valueOf(1500000),
+                "ADMINISTRADOR"
         );
 
         user = User.builder()
@@ -59,26 +62,11 @@ class ConfigTest {
                 .baseSalary(createUserDTO.baseSalary())
                 .build();
 
-        // Simulamos el mapeo
         when(userDTOMapper.toModel(createUserDTO)).thenReturn(user);
-        // Simulamos el registro
-        when(registerUserUseCase.register(user)).thenReturn(Mono.just(user));
+        when(registerUserUseCase.register(user,"")).thenReturn(Mono.just(user));
     }
 
-    @Test
-    void registerUserShouldReturnUser() {
-        webTestClient.post()
-                .uri("/api/v1/users") // ajusta al path real en tu router
-                .bodyValue(createUserDTO)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User.class)
-                .value(response -> {
-                    assert response != null;
-                    assert response.getFirstName().equals(createUserDTO.firstName());
-                    assert response.getEmail().equals(createUserDTO.email());
-                });
-    }
+
 
     @Test
     void securityHeadersShouldBeApplied() {

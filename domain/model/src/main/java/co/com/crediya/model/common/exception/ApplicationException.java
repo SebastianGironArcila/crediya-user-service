@@ -1,4 +1,4 @@
-package co.com.crediya.model.common.ex;
+package co.com.crediya.model.common.exception;
 
 public class ApplicationException extends RuntimeException {
 

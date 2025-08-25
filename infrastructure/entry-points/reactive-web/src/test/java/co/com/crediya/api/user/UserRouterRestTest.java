@@ -1,11 +1,16 @@
 package co.com.crediya.api.user;
 
+import co.com.crediya.api.config.GlobalExceptionHandler;
+import co.com.crediya.api.config.ValidationHandler;
 import co.com.crediya.api.dto.CreateUserDTO;
 import co.com.crediya.api.mapper.UserDTOMapper;
 import co.com.crediya.model.user.User;
 import co.com.crediya.usecase.user.RegisterUserUseCase;
+import jakarta.validation.*;
 import org.assertj.core.api.Assertions;
+import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.test.context.ContextConfiguration;
@@ -14,12 +19,16 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Set;
+
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {UserRouterRest.class, UserHandler.class})
+@ContextConfiguration(classes = {UserRouterRest.class, UserHandler.class,GlobalExceptionHandler.class})
 @WebFluxTest
 class UserRouterRestTest {
 
@@ -32,44 +41,411 @@ class UserRouterRestTest {
     @MockitoBean
     private UserDTOMapper userDTOMapper;
 
+    @MockitoBean
+    private ValidationHandler validationHandler;
+
+
+    private final  CreateUserDTO createUserDTO = CreateUserDTO.builder()
+            .firstName("Juan")
+            .lastName("Pérez")
+            .birthDate(LocalDate.of(1990, 1, 1))
+            .address("Calle 123")
+            .phone("3001234567")
+            .email("juan.perez@test.com")
+            .identityDocument("100200300")
+            .baseSalary(BigDecimal.valueOf(1500000))
+            .roleName("ADMINISTRADOR")
+            .build();
+
+
+    private final User userModel = User.builder()
+            .firstName(createUserDTO.firstName())
+            .lastName(createUserDTO.lastName())
+            .birthDate(createUserDTO.birthDate())
+            .address(createUserDTO.address())
+            .phone(createUserDTO.phone())
+            .email(createUserDTO.email())
+            .baseSalary(createUserDTO.baseSalary())
+            .roleId(1)
+            .build();
+
+    private final  CreateUserDTO validUserDTO = CreateUserDTO.builder()
+            .firstName("Juan")
+            .lastName("Pérez")
+            .birthDate(LocalDate.of(1990, 1, 1))
+            .address("Calle 123")
+            .phone("3001234567")
+            .email("juan.perez@test.com")
+            .identityDocument("100200300")
+            .baseSalary(BigDecimal.valueOf(1500000))
+            .roleName("ADMINISTRADOR")
+            .build();
+
     @Test
     void shouldRegisterUserSuccessfully() {
-        // Creamos el DTO como record
-        CreateUserDTO dto = new CreateUserDTO(
-                "Juan",
-                "Pérez",
-                LocalDate.of(1990, 1, 1),
-                "Calle 123",
-                "3001234567",
-                "juan.perez@test.com",
-                3500.0
-        );
 
-        // Creamos el modelo User
-        User userModel = User.builder()
-                .firstName(dto.firstName())
-                .lastName(dto.lastName())
-                .birthDate(dto.birthDate())
-                .address(dto.address())
-                .phone(dto.phone())
-                .email(dto.email())
-                .baseSalary(dto.baseSalary())
-                .build();
-
-        // Simulamos mapper y caso de uso
+        when(validationHandler.validate(any(CreateUserDTO.class))).thenReturn(Mono.just(createUserDTO));
         when(userDTOMapper.toModel(any(CreateUserDTO.class))).thenReturn(userModel);
-        when(registerUserUseCase.register(any(User.class))).thenReturn(Mono.just(userModel));
+        when(registerUserUseCase.register(any(User.class), anyString())).thenReturn(Mono.just(userModel));
 
         webTestClient.post()
                 .uri("/api/v1/users")
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(dto)
+                .bodyValue(createUserDTO)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(User.class)
                 .value(userResponse -> {
-                    Assertions.assertThat(userResponse.getEmail()).isEqualTo(dto.email());
-                    Assertions.assertThat(userResponse.getFirstName()).isEqualTo(dto.firstName());
+                    Assertions.assertThat(userResponse.getEmail()).isEqualTo(createUserDTO.email());
+                    Assertions.assertThat(userResponse.getFirstName()).isEqualTo(createUserDTO.firstName());
                 });
     }
+
+
+
+    @Test
+    void whenFirstNameIsBlank_thenReturnBadRequest() {
+
+        ConstraintViolation<?> violation = Mockito.mock(ConstraintViolation.class);
+        Path path = PathImpl.createPathFromString("firstName");
+
+        Mockito.when(violation.getPropertyPath()).thenReturn(path);
+        Mockito.when(violation.getMessage()).thenReturn("El nombre es obligatorio");
+
+        Set<ConstraintViolation<?>> violations = Set.of(violation);
+
+        Mockito.when(validationHandler.validate(any(CreateUserDTO.class)))
+                .thenReturn(Mono.error(new ConstraintViolationException("Validation failed", violations)));
+
+        CreateUserDTO invalidDTO = validUserDTO.toBuilder().firstName("").build();
+
+
+        webTestClient.post()
+                .uri("/api/v1/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(invalidDTO)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
+                .jsonPath("$.message[0]").isEqualTo("firstName: El nombre es obligatorio");
+    }
+
+    @Test
+    void whenLastNameIsBlank_thenReturnBadRequest() {
+        ConstraintViolation<?> violation = Mockito.mock(ConstraintViolation.class);
+        Path path = PathImpl.createPathFromString("lastName");
+
+        Mockito.when(violation.getPropertyPath()).thenReturn(path);
+        Mockito.when(violation.getMessage()).thenReturn("El apellido es obligatorio");
+
+        Set<ConstraintViolation<?>> violations = Set.of(violation);
+
+        Mockito.when(validationHandler.validate(any(CreateUserDTO.class)))
+                .thenReturn(Mono.error(new ConstraintViolationException("Validation failed", violations)));
+
+        CreateUserDTO invalidDTO = validUserDTO.toBuilder().lastName("").build();
+
+        webTestClient.post()
+                .uri("/api/v1/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(invalidDTO)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
+                .jsonPath("$.message[0]").isEqualTo("lastName: El apellido es obligatorio");
+
+    }
+
+    @Test
+    void whenBirthDateIsNull_thenReturnBadRequest() {
+        ConstraintViolation<?> violation = Mockito.mock(ConstraintViolation.class);
+        Path path = PathImpl.createPathFromString("birthDate");
+
+        Mockito.when(violation.getPropertyPath()).thenReturn(path);
+        Mockito.when(violation.getMessage()).thenReturn("La fecha de nacimiento es obligatoria");
+
+        Set<ConstraintViolation<?>> violations = Set.of(violation);
+
+        Mockito.when(validationHandler.validate(any(CreateUserDTO.class)))
+                .thenReturn(Mono.error(new ConstraintViolationException("Validation failed", violations)));
+
+        CreateUserDTO invalidDTO = validUserDTO.toBuilder().birthDate(null).build();
+
+        webTestClient.post()
+                .uri("/api/v1/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(invalidDTO)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
+                .jsonPath("$.message[0]").isEqualTo("birthDate: La fecha de nacimiento es obligatoria");
+
+    }
+
+    @Test
+    void whenAddressIsBlank_thenReturnBadRequest() {
+        ConstraintViolation<?> violation = Mockito.mock(ConstraintViolation.class);
+        Path path = PathImpl.createPathFromString("address");
+
+        Mockito.when(violation.getPropertyPath()).thenReturn(path);
+        Mockito.when(violation.getMessage()).thenReturn("La dirección es obligatoria");
+
+        Set<ConstraintViolation<?>> violations = Set.of(violation);
+
+        Mockito.when(validationHandler.validate(any(CreateUserDTO.class)))
+                .thenReturn(Mono.error(new ConstraintViolationException("Validation failed", violations)));
+
+        CreateUserDTO invalidDTO = validUserDTO.toBuilder().birthDate(null).build();
+
+        webTestClient.post()
+                .uri("/api/v1/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(invalidDTO)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
+                .jsonPath("$.message[0]").isEqualTo("address: La dirección es obligatoria");
+    }
+
+    @Test
+    void whenPhoneIsBlank_thenReturnBadRequest() {
+        ConstraintViolation<?> violation = Mockito.mock(ConstraintViolation.class);
+        Path path = PathImpl.createPathFromString("phone");
+
+        Mockito.when(violation.getPropertyPath()).thenReturn(path);
+        Mockito.when(violation.getMessage()).thenReturn("El teléfono es obligatorio");
+
+        Set<ConstraintViolation<?>> violations = Set.of(violation);
+
+        Mockito.when(validationHandler.validate(any(CreateUserDTO.class)))
+                .thenReturn(Mono.error(new ConstraintViolationException("Validation failed", violations)));
+
+        CreateUserDTO invalidDTO = validUserDTO.toBuilder().phone("").build();
+
+        webTestClient.post()
+                .uri("/api/v1/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(invalidDTO)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
+                .jsonPath("$.message[0]").isEqualTo("phone: El teléfono es obligatorio");
+    }
+
+    @Test
+    void whenEmailIsBlank_thenReturnBadRequest() {
+        ConstraintViolation<?> violation = Mockito.mock(ConstraintViolation.class);
+        Path path = PathImpl.createPathFromString("email");
+
+        Mockito.when(violation.getPropertyPath()).thenReturn(path);
+        Mockito.when(violation.getMessage()).thenReturn("El email es obligatorio");
+
+        Set<ConstraintViolation<?>> violations = Set.of(violation);
+
+        Mockito.when(validationHandler.validate(any(CreateUserDTO.class)))
+                .thenReturn(Mono.error(new ConstraintViolationException("Validation failed", violations)));
+
+        CreateUserDTO invalidDTO = validUserDTO.toBuilder().email("").build();
+
+        webTestClient.post()
+                .uri("/api/v1/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(invalidDTO)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
+                .jsonPath("$.message[0]").isEqualTo("email: El email es obligatorio");
+    }
+
+    @Test
+    void whenEmailIsInvalid_thenReturnBadRequest() {
+        ConstraintViolation<?> violation = Mockito.mock(ConstraintViolation.class);
+        Path path = PathImpl.createPathFromString("email");
+
+        Mockito.when(violation.getPropertyPath()).thenReturn(path);
+        Mockito.when(violation.getMessage()).thenReturn("Formato de email inválido");
+
+        Set<ConstraintViolation<?>> violations = Set.of(violation);
+
+        Mockito.when(validationHandler.validate(any(CreateUserDTO.class)))
+                .thenReturn(Mono.error(new ConstraintViolationException("Validation failed", violations)));
+
+        CreateUserDTO invalidDTO = validUserDTO.toBuilder().email("invalid-email").build();
+
+        webTestClient.post()
+                .uri("/api/v1/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(invalidDTO)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
+                .jsonPath("$.message[0]").isEqualTo("email: Formato de email inválido");
+    }
+
+
+    @Test
+    void whenIdentityDocumentIsBlank_thenReturnBadRequest() {
+        ConstraintViolation<?> violation = Mockito.mock(ConstraintViolation.class);
+        Path path = PathImpl.createPathFromString("identityDocument");
+
+        Mockito.when(violation.getPropertyPath()).thenReturn(path);
+        Mockito.when(violation.getMessage()).thenReturn("El documento de identidad es obligatorio");
+
+        Set<ConstraintViolation<?>> violations = Set.of(violation);
+
+        Mockito.when(validationHandler.validate(any(CreateUserDTO.class)))
+                .thenReturn(Mono.error(new ConstraintViolationException("Validation failed", violations)));
+
+        CreateUserDTO invalidDTO = validUserDTO.toBuilder().identityDocument("").build();
+
+        webTestClient.post()
+                .uri("/api/v1/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(invalidDTO)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
+                .jsonPath("$.message[0]").isEqualTo("identityDocument: El documento de identidad es obligatorio");
+    }
+
+
+    @Test
+    void whenBaseSalaryIsNull_thenReturnBadRequest() {
+        ConstraintViolation<?> violation = Mockito.mock(ConstraintViolation.class);
+        Path path = PathImpl.createPathFromString("baseSalary");
+
+        Mockito.when(violation.getPropertyPath()).thenReturn(path);
+        Mockito.when(violation.getMessage()).thenReturn("El salario base es obligatorio");
+
+        Set<ConstraintViolation<?>> violations = Set.of(violation);
+
+        Mockito.when(validationHandler.validate(any(CreateUserDTO.class)))
+                .thenReturn(Mono.error(new ConstraintViolationException("Validation failed", violations)));
+
+        CreateUserDTO invalidDTO = validUserDTO.toBuilder().baseSalary(null).build();
+
+        webTestClient.post()
+                .uri("/api/v1/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(invalidDTO)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
+                .jsonPath("$.message[0]").isEqualTo("baseSalary: El salario base es obligatorio");
+    }
+
+    @Test
+    void whenBaseSalaryIsZero_thenReturnBadRequest() {
+        ConstraintViolation<?> violation = Mockito.mock(ConstraintViolation.class);
+        Path path = PathImpl.createPathFromString("baseSalary");
+
+        Mockito.when(violation.getPropertyPath()).thenReturn(path);
+        Mockito.when(violation.getMessage()).thenReturn("El salario debe ser mayor a 0");
+
+        Set<ConstraintViolation<?>> violations = Set.of(violation);
+
+        Mockito.when(validationHandler.validate(any(CreateUserDTO.class)))
+                .thenReturn(Mono.error(new ConstraintViolationException("Validation failed", violations)));
+
+        CreateUserDTO invalidDTO = validUserDTO.toBuilder().baseSalary(BigDecimal.ZERO).build();
+
+        webTestClient.post()
+                .uri("/api/v1/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(invalidDTO)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
+                .jsonPath("$.message[0]").isEqualTo("baseSalary: El salario debe ser mayor a 0");
+    }
+
+    @Test
+    void whenBaseSalaryIsNegative_thenReturnBadRequest() {
+        ConstraintViolation<?> violation = Mockito.mock(ConstraintViolation.class);
+        Path path = PathImpl.createPathFromString("baseSalary");
+
+        Mockito.when(violation.getPropertyPath()).thenReturn(path);
+        Mockito.when(violation.getMessage()).thenReturn("El salario debe ser mayor a 0");
+
+        Set<ConstraintViolation<?>> violations = Set.of(violation);
+
+        Mockito.when(validationHandler.validate(any(CreateUserDTO.class)))
+                .thenReturn(Mono.error(new ConstraintViolationException("Validation failed", violations)));
+
+        CreateUserDTO invalidDTO = validUserDTO.toBuilder().baseSalary(BigDecimal.valueOf(-1000)).build();
+
+        webTestClient.post()
+                .uri("/api/v1/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(invalidDTO)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
+                .jsonPath("$.message[0]").isEqualTo("baseSalary: El salario debe ser mayor a 0");
+    }
+
+    @Test
+    void whenBaseSalaryExceedsMax_thenReturnBadRequest() {
+        ConstraintViolation<?> violation = Mockito.mock(ConstraintViolation.class);
+        Path path = PathImpl.createPathFromString("baseSalary");
+
+        Mockito.when(violation.getPropertyPath()).thenReturn(path);
+        Mockito.when(violation.getMessage()).thenReturn("El salario no puede superar los 15 millones");
+
+        Set<ConstraintViolation<?>> violations = Set.of(violation);
+
+        Mockito.when(validationHandler.validate(any(CreateUserDTO.class)))
+                .thenReturn(Mono.error(new ConstraintViolationException("Validation failed", violations)));
+
+
+        CreateUserDTO invalidDTO = validUserDTO.toBuilder().baseSalary(BigDecimal.valueOf(16000000)).build();
+
+        webTestClient.post()
+                .uri("/api/v1/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(invalidDTO)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
+                .jsonPath("$.message[0]").isEqualTo("baseSalary: El salario no puede superar los 15 millones");
+    }
+
+    @Test
+    void whenRoleNameIsBlank_thenReturnBadRequest() {
+        ConstraintViolation<?> violation = Mockito.mock(ConstraintViolation.class);
+        Path path = PathImpl.createPathFromString("roleName");
+
+        Mockito.when(violation.getPropertyPath()).thenReturn(path);
+        Mockito.when(violation.getMessage()).thenReturn("El rol es obligatorio");
+
+        Set<ConstraintViolation<?>> violations = Set.of(violation);
+
+        Mockito.when(validationHandler.validate(any(CreateUserDTO.class)))
+                .thenReturn(Mono.error(new ConstraintViolationException("Validation failed", violations)));
+
+        CreateUserDTO invalidDTO = validUserDTO.toBuilder().roleName("").build();
+
+        webTestClient.post()
+                .uri("/api/v1/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(invalidDTO)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
+                .jsonPath("$.message[0]").isEqualTo("roleName: El rol es obligatorio");
+    }
+
 }

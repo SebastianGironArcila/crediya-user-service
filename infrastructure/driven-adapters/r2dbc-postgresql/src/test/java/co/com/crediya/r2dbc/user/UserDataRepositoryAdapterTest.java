@@ -1,18 +1,19 @@
-package co.com.crediya.r2dbc;
+package co.com.crediya.r2dbc.user;
 
 import co.com.crediya.model.user.User;
-import co.com.crediya.r2dbc.user.UserData;
-import co.com.crediya.r2dbc.user.UserDataRepository;
-import co.com.crediya.r2dbc.user.UserDataRepositoryAdapter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivecommons.utils.ObjectMapper;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.math.BigDecimal;
+
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,6 +28,9 @@ class UserDataRepositoryAdapterTest {
     @Mock
     private ObjectMapper mapper;
 
+    @Mock
+    private TransactionalOperator transactionalOperator;
+
     private  final UserData userData = UserData.builder()
             .id(1L)
             .firstName("Dahiana")
@@ -35,7 +39,8 @@ class UserDataRepositoryAdapterTest {
             .address("Calle 123")
             .phone("3001234567")
             .email("dahiana@example.com")
-            .baseSalary(2000.0)
+            .baseSalary(BigDecimal.valueOf(2000.0))
+            .roleId(1)
             .build();
 
     private  final User user = User.builder()
@@ -45,7 +50,8 @@ class UserDataRepositoryAdapterTest {
             .address("Calle 123")
             .phone("3001234567")
             .email("dahiana@example.com")
-            .baseSalary(2000.0)
+            .baseSalary(BigDecimal.valueOf(2000.0))
+            .roleId(1)
             .build();
 
 
@@ -54,6 +60,8 @@ class UserDataRepositoryAdapterTest {
         when(mapper.map(userData, User.class)).thenReturn(user);
         when(mapper.map(user, UserData.class)).thenReturn(userData);
         when(repository.save(userData)).thenReturn(Mono.just(userData));
+        when(transactionalOperator.transactional(any(Mono.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         Mono<User> result = adapter.save(user);
 

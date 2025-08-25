@@ -79,6 +79,20 @@ subprojects {
             csv.setRequired false
             html.setOutputLocation layout.buildDirectory.dir("reports/jacocoHtml")
         }
+
+        afterEvaluate {
+            classDirectories.setFrom(files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                        'co.com/crediya/**/MainApplication.class',
+                        '*/model/*',
+                        '*/config/*',
+                        '*/dto/*',
+                        '*/mapper/*',
+                        '*/request/*',
+                        '*/response/*'
+                ])
+            }))
+        }
     }
 
 }
