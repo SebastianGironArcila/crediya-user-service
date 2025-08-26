@@ -63,7 +63,7 @@ class ValidationHandlerTest {
                     ConstraintViolationException ex = (ConstraintViolationException) throwable;
                     Assertions.assertThat(ex.getConstraintViolations())
                             .anyMatch(v -> v.getPropertyPath().toString().equals("firstName") &&
-                                    v.getMessage().equals("El nombre es obligatorio"));
+                                    v.getMessage().equals("FirstName is required"));
                 })
                 .verify();
     }
@@ -88,7 +88,7 @@ class ValidationHandlerTest {
                     ConstraintViolationException ex = (ConstraintViolationException) throwable;
                     Assertions.assertThat(ex.getConstraintViolations())
                             .anyMatch(v -> v.getPropertyPath().toString().equals("email") &&
-                                    v.getMessage().equals("Formato de email inválido"));
+                                    v.getMessage().equals("Invalid format email"));
                 })
                 .verify();
     }

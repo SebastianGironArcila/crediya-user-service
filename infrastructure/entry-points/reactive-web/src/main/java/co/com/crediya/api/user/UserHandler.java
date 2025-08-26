@@ -16,22 +16,28 @@ import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
-@Tag(name = "User", description = "Endpoints para gestión de usuarios")
+@Tag(name = "User", description = "Endpoints for user management")
 @Slf4j
 public class UserHandler {
     private final RegisterUserUseCase registerUserUseCase;
     private final UserDTOMapper userDTOMapper;
     private final ValidationHandler validationHandler;
 
-    @Operation(summary = "Registrar un nuevo usuario")
+    @Operation(summary = "Register a new user")
     public Mono<ServerResponse> registerUser(ServerRequest request) {
+        log.info("Starting user registration process");
+
         return request.bodyToMono(CreateUserDTO.class)
+                .doOnNext(dto -> log.debug("Registration request for email: {}", dto.email()))
                 .flatMap(validationHandler::validate)
                 .flatMap(dto -> {
                     User user = userDTOMapper.toModel(dto);
+                    log.debug("DTO mapped to user model for: {}", dto.email());
                     return registerUserUseCase.register(user, dto.roleName());
                 })
-                .flatMap(user -> ServerResponse.ok().bodyValue(user));
-
+                .doOnNext(user -> log.info("User registered successfully - ID: {}", user.getId()))
+                .flatMap(user -> ServerResponse.ok().bodyValue(user))
+                .doOnError(error -> log.error("Registration failed: {}", error.getMessage()))
+                .doOnSuccess(response -> log.debug("Registration process completed"));
     }
 }

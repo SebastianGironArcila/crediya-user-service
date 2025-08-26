@@ -110,7 +110,7 @@ class UserRouterRestTest {
         Path path = PathImpl.createPathFromString("firstName");
 
         Mockito.when(violation.getPropertyPath()).thenReturn(path);
-        Mockito.when(violation.getMessage()).thenReturn("El nombre es obligatorio");
+        Mockito.when(violation.getMessage()).thenReturn("FirstName is required");
 
         Set<ConstraintViolation<?>> violations = Set.of(violation);
 
@@ -128,7 +128,7 @@ class UserRouterRestTest {
                 .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
-                .jsonPath("$.message[0]").isEqualTo("firstName: El nombre es obligatorio");
+                .jsonPath("$.message[0]").isEqualTo("firstName: FirstName is required");
     }
 
     @Test
@@ -137,7 +137,7 @@ class UserRouterRestTest {
         Path path = PathImpl.createPathFromString("lastName");
 
         Mockito.when(violation.getPropertyPath()).thenReturn(path);
-        Mockito.when(violation.getMessage()).thenReturn("El apellido es obligatorio");
+        Mockito.when(violation.getMessage()).thenReturn("LastName is required");
 
         Set<ConstraintViolation<?>> violations = Set.of(violation);
 
@@ -154,7 +154,7 @@ class UserRouterRestTest {
                 .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
-                .jsonPath("$.message[0]").isEqualTo("lastName: El apellido es obligatorio");
+                .jsonPath("$.message[0]").isEqualTo("lastName: LastName is required");
 
     }
 
@@ -164,7 +164,7 @@ class UserRouterRestTest {
         Path path = PathImpl.createPathFromString("birthDate");
 
         Mockito.when(violation.getPropertyPath()).thenReturn(path);
-        Mockito.when(violation.getMessage()).thenReturn("La fecha de nacimiento es obligatoria");
+        Mockito.when(violation.getMessage()).thenReturn("BirthDate is required");
 
         Set<ConstraintViolation<?>> violations = Set.of(violation);
 
@@ -181,7 +181,7 @@ class UserRouterRestTest {
                 .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
-                .jsonPath("$.message[0]").isEqualTo("birthDate: La fecha de nacimiento es obligatoria");
+                .jsonPath("$.message[0]").isEqualTo("birthDate: BirthDate is required");
 
     }
 
@@ -191,7 +191,7 @@ class UserRouterRestTest {
         Path path = PathImpl.createPathFromString("address");
 
         Mockito.when(violation.getPropertyPath()).thenReturn(path);
-        Mockito.when(violation.getMessage()).thenReturn("La dirección es obligatoria");
+        Mockito.when(violation.getMessage()).thenReturn("Address is required");
 
         Set<ConstraintViolation<?>> violations = Set.of(violation);
 
@@ -208,7 +208,7 @@ class UserRouterRestTest {
                 .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
-                .jsonPath("$.message[0]").isEqualTo("address: La dirección es obligatoria");
+                .jsonPath("$.message[0]").isEqualTo("address: Address is required");
     }
 
     @Test
@@ -217,7 +217,7 @@ class UserRouterRestTest {
         Path path = PathImpl.createPathFromString("phone");
 
         Mockito.when(violation.getPropertyPath()).thenReturn(path);
-        Mockito.when(violation.getMessage()).thenReturn("El teléfono es obligatorio");
+        Mockito.when(violation.getMessage()).thenReturn("Phone is required");
 
         Set<ConstraintViolation<?>> violations = Set.of(violation);
 
@@ -234,7 +234,7 @@ class UserRouterRestTest {
                 .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
-                .jsonPath("$.message[0]").isEqualTo("phone: El teléfono es obligatorio");
+                .jsonPath("$.message[0]").isEqualTo("phone: Phone is required");
     }
 
     @Test
@@ -243,7 +243,7 @@ class UserRouterRestTest {
         Path path = PathImpl.createPathFromString("email");
 
         Mockito.when(violation.getPropertyPath()).thenReturn(path);
-        Mockito.when(violation.getMessage()).thenReturn("El email es obligatorio");
+        Mockito.when(violation.getMessage()).thenReturn("Email is required");
 
         Set<ConstraintViolation<?>> violations = Set.of(violation);
 
@@ -260,7 +260,7 @@ class UserRouterRestTest {
                 .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
-                .jsonPath("$.message[0]").isEqualTo("email: El email es obligatorio");
+                .jsonPath("$.message[0]").isEqualTo("email: Email is required");
     }
 
     @Test
@@ -269,7 +269,7 @@ class UserRouterRestTest {
         Path path = PathImpl.createPathFromString("email");
 
         Mockito.when(violation.getPropertyPath()).thenReturn(path);
-        Mockito.when(violation.getMessage()).thenReturn("Formato de email inválido");
+        Mockito.when(violation.getMessage()).thenReturn("Invalid format email");
 
         Set<ConstraintViolation<?>> violations = Set.of(violation);
 
@@ -286,7 +286,7 @@ class UserRouterRestTest {
                 .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
-                .jsonPath("$.message[0]").isEqualTo("email: Formato de email inválido");
+                .jsonPath("$.message[0]").isEqualTo("email: Invalid format email");
     }
 
 
@@ -296,7 +296,7 @@ class UserRouterRestTest {
         Path path = PathImpl.createPathFromString("identityDocument");
 
         Mockito.when(violation.getPropertyPath()).thenReturn(path);
-        Mockito.when(violation.getMessage()).thenReturn("El documento de identidad es obligatorio");
+        Mockito.when(violation.getMessage()).thenReturn("IdentityDocument is requited");
 
         Set<ConstraintViolation<?>> violations = Set.of(violation);
 
@@ -313,7 +313,7 @@ class UserRouterRestTest {
                 .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
-                .jsonPath("$.message[0]").isEqualTo("identityDocument: El documento de identidad es obligatorio");
+                .jsonPath("$.message[0]").isEqualTo("identityDocument: IdentityDocument is requited");
     }
 
 
@@ -323,7 +323,7 @@ class UserRouterRestTest {
         Path path = PathImpl.createPathFromString("baseSalary");
 
         Mockito.when(violation.getPropertyPath()).thenReturn(path);
-        Mockito.when(violation.getMessage()).thenReturn("El salario base es obligatorio");
+        Mockito.when(violation.getMessage()).thenReturn("BaseSalary is required");
 
         Set<ConstraintViolation<?>> violations = Set.of(violation);
 
@@ -340,7 +340,7 @@ class UserRouterRestTest {
                 .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
-                .jsonPath("$.message[0]").isEqualTo("baseSalary: El salario base es obligatorio");
+                .jsonPath("$.message[0]").isEqualTo("baseSalary: BaseSalary is required");
     }
 
     @Test
@@ -349,7 +349,7 @@ class UserRouterRestTest {
         Path path = PathImpl.createPathFromString("baseSalary");
 
         Mockito.when(violation.getPropertyPath()).thenReturn(path);
-        Mockito.when(violation.getMessage()).thenReturn("El salario debe ser mayor a 0");
+        Mockito.when(violation.getMessage()).thenReturn("BaseSalary must be greater than 0.");
 
         Set<ConstraintViolation<?>> violations = Set.of(violation);
 
@@ -366,7 +366,7 @@ class UserRouterRestTest {
                 .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
-                .jsonPath("$.message[0]").isEqualTo("baseSalary: El salario debe ser mayor a 0");
+                .jsonPath("$.message[0]").isEqualTo("baseSalary: BaseSalary must be greater than 0.");
     }
 
     @Test
@@ -375,7 +375,7 @@ class UserRouterRestTest {
         Path path = PathImpl.createPathFromString("baseSalary");
 
         Mockito.when(violation.getPropertyPath()).thenReturn(path);
-        Mockito.when(violation.getMessage()).thenReturn("El salario debe ser mayor a 0");
+        Mockito.when(violation.getMessage()).thenReturn("BaseSalary must be greater than 0.");
 
         Set<ConstraintViolation<?>> violations = Set.of(violation);
 
@@ -392,7 +392,7 @@ class UserRouterRestTest {
                 .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
-                .jsonPath("$.message[0]").isEqualTo("baseSalary: El salario debe ser mayor a 0");
+                .jsonPath("$.message[0]").isEqualTo("baseSalary: BaseSalary must be greater than 0.");
     }
 
     @Test
@@ -401,7 +401,7 @@ class UserRouterRestTest {
         Path path = PathImpl.createPathFromString("baseSalary");
 
         Mockito.when(violation.getPropertyPath()).thenReturn(path);
-        Mockito.when(violation.getMessage()).thenReturn("El salario no puede superar los 15 millones");
+        Mockito.when(violation.getMessage()).thenReturn("BaseSalary cannot exceed 15 million.");
 
         Set<ConstraintViolation<?>> violations = Set.of(violation);
 
@@ -419,7 +419,7 @@ class UserRouterRestTest {
                 .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
-                .jsonPath("$.message[0]").isEqualTo("baseSalary: El salario no puede superar los 15 millones");
+                .jsonPath("$.message[0]").isEqualTo("baseSalary: BaseSalary cannot exceed 15 million.");
     }
 
     @Test
@@ -428,7 +428,7 @@ class UserRouterRestTest {
         Path path = PathImpl.createPathFromString("roleName");
 
         Mockito.when(violation.getPropertyPath()).thenReturn(path);
-        Mockito.when(violation.getMessage()).thenReturn("El rol es obligatorio");
+        Mockito.when(violation.getMessage()).thenReturn("Role is required");
 
         Set<ConstraintViolation<?>> violations = Set.of(violation);
 
@@ -445,7 +445,7 @@ class UserRouterRestTest {
                 .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
-                .jsonPath("$.message[0]").isEqualTo("roleName: El rol es obligatorio");
+                .jsonPath("$.message[0]").isEqualTo("roleName: Role is required");
     }
 
 }

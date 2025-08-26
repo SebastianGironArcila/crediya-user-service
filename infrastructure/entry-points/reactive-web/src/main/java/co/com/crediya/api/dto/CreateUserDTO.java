@@ -9,34 +9,34 @@ import java.time.LocalDate;
 @Builder(toBuilder = true)
 public record CreateUserDTO(
 
-        @NotBlank(message = "El nombre es obligatorio")
+        @NotBlank(message = "FirstName is required")
         String firstName,
 
-        @NotBlank(message = "El apellido es obligatorio")
+        @NotBlank(message = "LastName is required")
         String lastName,
 
-        @NotNull(message = "La fecha de nacimiento es obligatoria")
+        @NotNull(message = "BirthDate is required")
         LocalDate birthDate,
 
-        @NotBlank(message = "La dirección es obligatoria")
+        @NotBlank(message = "Address is required")
         String address,
 
-        @NotBlank(message = "El teléfono es obligatorio")
+        @NotBlank(message = "Phone is required")
         String phone,
 
-        @NotBlank(message = "El email es obligatorio")
-        @Email(message = "Formato de email inválido")
+        @NotBlank(message = "Email is required")
+        @Email(message = "Invalid format email")
         String email,
 
-        @NotBlank(message = "El documento de identidad es obligatorio")
+        @NotBlank(message = "IdentityDocument is requited")
         String identityDocument,
 
-        @NotNull(message = "El salario base es obligatorio")
-        @DecimalMin(value = "0.0", inclusive = false, message = "El salario debe ser mayor a 0")
-        @DecimalMax(value = "15000000.0", message = "El salario no puede superar los 15 millones")
+        @NotNull(message = "BaseSalary is required")
+        @DecimalMin(value = "0.0", inclusive = false, message = "BaseSalary must be greater than 0.")
+        @DecimalMax(value = "15000000.0", message = "BaseSalary cannot exceed 15 million.")
         BigDecimal baseSalary,
 
-        @NotBlank(message = "El rol es obligatorio")
+        @NotBlank(message = "Role is required")
         String roleName
 ) {
 }

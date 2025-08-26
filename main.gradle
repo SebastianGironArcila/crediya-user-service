@@ -80,19 +80,6 @@ subprojects {
             html.setOutputLocation layout.buildDirectory.dir("reports/jacocoHtml")
         }
 
-        afterEvaluate {
-            classDirectories.setFrom(files(classDirectories.files.collect {
-                fileTree(dir: it, exclude: [
-                        'co.com/crediya/**/MainApplication.class',
-                        '*/model/*',
-                        '*/config/*',
-                        '*/dto/*',
-                        '*/mapper/*',
-                        '*/request/*',
-                        '*/response/*'
-                ])
-            }))
-        }
     }
 
 }
@@ -103,10 +90,17 @@ jacoco {
 }
 
 tasks.register('jacocoMergedReport', JacocoReport) {
-    dependsOn = [test, subprojects.jacocoTestReport, pitestReportAggregate]
+    dependsOn = [test, subprojects.jacocoTestReport]
     additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
     sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
-    classDirectories.setFrom files(subprojects.sourceSets.main.output)
+    classDirectories.setFrom files(subprojects.sourceSets.main.output).collect {
+        fileTree(dir: it, exclude: [
+                'co/com/crediya/MainApplication.class',
+                '**/api/config/**/*',
+                '**/api/mapper/**/*',
+                '**/r2dbc/config/**/*',
+        ])
+    }
     executionData.setFrom project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
     reports {
         xml.setRequired true
