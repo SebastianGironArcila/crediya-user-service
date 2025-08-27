@@ -43,4 +43,13 @@ public class UserDataRepositoryAdapter extends ReactiveAdapterOperations<
                 .doOnNext(exists -> log.debug("Email {} exists: {}", email, exists))
                 .doOnError(error -> log.error("Error checking email existence: {}", error.getMessage()));
     }
+
+    @Override
+    public Mono<User> findByIdentityDocument(String identityDocument) {
+        log.debug("Finding user by identity document: {}", identityDocument);
+        return repository.findByIdentityDocument(identityDocument)
+                .map(this::toEntity)
+                .doOnNext(user -> log.debug("User found: {}", user.getId()))
+                .doOnError(error -> log.error("Error finding user by identity document: {}", error.getMessage()));
+    }
 }

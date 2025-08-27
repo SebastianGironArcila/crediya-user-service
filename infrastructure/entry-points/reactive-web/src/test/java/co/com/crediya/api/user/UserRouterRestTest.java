@@ -3,9 +3,12 @@ package co.com.crediya.api.user;
 import co.com.crediya.api.config.GlobalExceptionHandler;
 import co.com.crediya.api.config.ValidationHandler;
 import co.com.crediya.api.dto.CreateUserDTO;
+import co.com.crediya.api.dto.UserDTO;
+import co.com.crediya.api.dto.UserIdentityDocumentDTO;
 import co.com.crediya.api.mapper.UserDTOMapper;
 import co.com.crediya.model.user.User;
 import co.com.crediya.usecase.user.RegisterUserUseCase;
+import co.com.crediya.usecase.user.ValidationUserUseCase;
 import jakarta.validation.*;
 import org.assertj.core.api.Assertions;
 import org.hibernate.validator.internal.engine.path.PathImpl;
@@ -37,6 +40,10 @@ class UserRouterRestTest {
 
     @MockitoBean
     private RegisterUserUseCase registerUserUseCase;
+
+
+    @MockitoBean
+    private ValidationUserUseCase validationUserUseCase;
 
     @MockitoBean
     private UserDTOMapper userDTOMapper;
@@ -80,6 +87,24 @@ class UserRouterRestTest {
             .baseSalary(BigDecimal.valueOf(1500000))
             .roleName("ADMINISTRADOR")
             .build();
+
+    private final  UserDTO userDTO = UserDTO.builder()
+            .firstName("Juan")
+            .lastName("Pérez")
+            .birthDate(LocalDate.of(1990, 1, 1))
+            .address("Calle 123")
+            .phone("3001234567")
+            .email("juan.perez@test.com")
+            .identityDocument("100200300")
+            .baseSalary(BigDecimal.valueOf(1500000))
+            .roleName("ADMINISTRADOR")
+            .build();
+
+    private final UserIdentityDocumentDTO userIdentityDocumentDTO = UserIdentityDocumentDTO.builder()
+            .identityDocument("100200300")
+            .build();
+
+
 
     @Test
     void shouldRegisterUserSuccessfully() {
@@ -448,4 +473,64 @@ class UserRouterRestTest {
                 .jsonPath("$.message[0]").isEqualTo("roleName: Role is required");
     }
 
+    @Test
+    void shouldReturnUserSuccessfully() {
+        UserIdentityDocumentDTO dto = new UserIdentityDocumentDTO("1234567890");
+
+        when(validationHandler.validate(any(UserIdentityDocumentDTO.class))).thenReturn(Mono.just(dto));
+        when(validationUserUseCase.getUserByIdentityDocument(anyString())).thenReturn(Mono.just(userModel));
+        when(userDTOMapper.toResponse(any(User.class))).thenReturn(userDTO);
+
+        webTestClient.get()
+                .uri("/api/v1/users/identity-document/1234567890")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(UserDTO.class)
+                .value(response -> {
+                    Assertions.assertThat(response.identityDocument()).isEqualTo("100200300");
+                    Assertions.assertThat(response.firstName()).isEqualTo("Juan");
+                    Assertions.assertThat(response.roleName()).isEqualTo("ADMINISTRADOR");
+                });
+    }
+
+
+
+    @Test
+    void whenIdentityDocumentInvalid_thenReturnBadRequest() {
+        ConstraintViolation<?> violation = Mockito.mock(ConstraintViolation.class);
+        Path path = PathImpl.createPathFromString("identityDocument");
+        Mockito.when(violation.getPropertyPath()).thenReturn(path);
+        Mockito.when(violation.getMessage()).thenReturn("Identity document must be 6-10 digits");
+
+        Set<ConstraintViolation<?>> violations = Set.of(violation);
+
+        when(validationHandler.validate(any(UserIdentityDocumentDTO.class)))
+                .thenReturn(Mono.error(new ConstraintViolationException("Validation failed", violations)));
+
+        webTestClient.get()
+                .uri("/api/v1/users/identity-document/123")
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
+                .jsonPath("$.message[0]").isEqualTo("identityDocument: Identity document must be 6-10 digits");
+    }
+
+
+    @Test
+    void whenInternalError_thenReturnServerError() {
+        UserIdentityDocumentDTO dto = new UserIdentityDocumentDTO("1234567890");
+
+        when(validationHandler.validate(any(UserIdentityDocumentDTO.class))).thenReturn(Mono.just(dto));
+        when(validationUserUseCase.getUserByIdentityDocument(anyString()))
+                .thenReturn(Mono.error(new RuntimeException("Database connection failed")));
+
+        webTestClient.get()
+                .uri("/api/v1/users/identity-document/1234567890")
+                .exchange()
+                .expectStatus().is5xxServerError()
+                .expectBody()
+                .jsonPath("$.message").isEqualTo("Database connection failed");
+    }
 }
+

@@ -2,9 +2,11 @@ package co.com.crediya.api.user;
 
 import co.com.crediya.api.config.ValidationHandler;
 import co.com.crediya.api.dto.CreateUserDTO;
+import co.com.crediya.api.dto.UserIdentityDocumentDTO;
 import co.com.crediya.api.mapper.UserDTOMapper;
 import co.com.crediya.model.user.User;
 import co.com.crediya.usecase.user.RegisterUserUseCase;
+import co.com.crediya.usecase.user.ValidationUserUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class UserHandler {
     private final RegisterUserUseCase registerUserUseCase;
+    private final ValidationUserUseCase validationUserUseCase;
     private final UserDTOMapper userDTOMapper;
     private final ValidationHandler validationHandler;
 
@@ -40,4 +43,20 @@ public class UserHandler {
                 .doOnError(error -> log.error("Registration failed: {}", error.getMessage()))
                 .doOnSuccess(response -> log.debug("Registration process completed"));
     }
+
+
+    @Operation(summary = "Get user by identity document")
+    public Mono<ServerResponse> getUserByIdentityDocument(ServerRequest request) {
+        String identityDocumentValue = request.pathVariable("identityDocument");
+
+        UserIdentityDocumentDTO dto = new UserIdentityDocumentDTO(identityDocumentValue);
+
+        return validationHandler.validate(dto)
+                .flatMap(validDto -> validationUserUseCase.getUserByIdentityDocument(validDto.identityDocument()))
+                .map(userDTOMapper::toResponse)
+                .flatMap(userDTO -> ServerResponse.ok().bodyValue(userDTO))
+                .doOnSuccess(response -> log.debug("User found successfully"))
+                .doOnError(error -> log.error("Error searching user: {}", error.getMessage()));
+    }
+
 }

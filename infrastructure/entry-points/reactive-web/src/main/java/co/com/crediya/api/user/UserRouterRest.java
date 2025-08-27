@@ -1,8 +1,11 @@
 package co.com.crediya.api.user;
 
 import co.com.crediya.api.dto.CreateUserDTO;
+import co.com.crediya.api.dto.UserDTO;
 import co.com.crediya.model.user.User;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,6 +18,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
+import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 
@@ -258,9 +262,168 @@ public class UserRouterRest {
                                     )
                             }
                     )
+            ),
+            @RouterOperation(
+                    path = "/api/v1/users/identity-document/{identityDocument}",
+                    beanClass = UserHandler.class,
+                    beanMethod = "getUserByIdentityDocument",
+                    operation = @Operation(
+                            operationId = "getUserByIdentityDocument",
+                            summary = "Get user by identity document",
+                            description = "Retrieves user information by identity document number. The identity document is validated (must be 6-10 digits) before searching. Used by other microservices to validate user existence for credit applications.",
+                            parameters = {
+                                    @Parameter(
+                                            name = "identityDocument",
+                                            description = "Identity document number (cédula, DNI, passport, etc.), 6-10 digits",
+                                            required = true,
+                                            example = "1234567890",
+                                            in = ParameterIn.PATH,
+                                            schema = @Schema(type = "string", pattern = "\\d{6,10}")
+                                    )
+                            },
+                            responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "User found successfully",
+                                            content = @Content(
+                                                    schema = @Schema(implementation = UserDTO.class),
+                                                    examples = {
+                                                            @ExampleObject(
+                                                                    name = "Scenario 1 - Standard user found",
+                                                                    summary = "Valid identity document, user exists",
+                                                                    value = """
+                            {
+                              "id": 1,
+                              "firstName": "John",
+                              "lastName": "Doe",
+                              "birthDate": "1990-05-15",
+                              "address": "123 Main St, City",
+                              "phone": "+573001234567",
+                              "email": "john.doe@email.com",
+                              "identityDocument": "1234567890",
+                              "baseSalary": 2500000.00,
+                              "roleName": "Admin"
+                            }
+                            """
+                                                            ),
+                                                            @ExampleObject(
+                                                                    name = "Scenario 2 - Another user found",
+                                                                    summary = "Different identity document, user exists",
+                                                                    value = """
+                            {
+                              "id": 2,
+                              "firstName": "Emily",
+                              "lastName": "Davis",
+                              "birthDate": "1993-07-14",
+                              "address": "987 Birch Blvd, County",
+                              "phone": "+573008889999",
+                              "email": "emily.davis@email.com",
+                              "identityDocument": "4433221100",
+                              "baseSalary": 2800000.00,
+                              "roleName": "Manager"
+                            }
+                            """
+                                                            )
+                                                    }
+                                            )
+                                    ),
+                                    @ApiResponse(
+                                            responseCode = "400",
+                                            description = "Bad Request - Invalid identity document format",
+                                            content = @Content(
+                                                    examples = {
+                                                            @ExampleObject(
+                                                                    name = "Scenario 1 - Blank identity document",
+                                                                    summary = "Identity document is empty",
+                                                                    value = """
+                            {
+                              "timestamp": "2024-01-15T10:30:00Z",
+                              "status": 400,
+                              "error": "Bad Request",
+                              "message": "Identity document cannot be blank",
+                              "path": "/api/v1/users/identity-document/"
+                            }
+                            """
+                                                            ),
+                                                            @ExampleObject(
+                                                                    name = "Scenario 2 - Identity document too short",
+                                                                    summary = "Identity document less than 6 digits",
+                                                                    value = """
+                            {
+                              "timestamp": "2024-01-15T10:30:00Z",
+                              "status": 400,
+                              "error": "Bad Request",
+                              "message": "Identity document must be 6-10 digits",
+                              "path": "/api/v1/users/identity-document/123"
+                            }
+                            """
+                                                            ),
+                                                            @ExampleObject(
+                                                                    name = "Scenario 3 - Identity document too long",
+                                                                    summary = "Identity document more than 10 digits",
+                                                                    value = """
+                            {
+                              "timestamp": "2024-01-15T10:30:00Z",
+                              "status": 400,
+                              "error": "Bad Request",
+                              "message": "Identity document must be 6-10 digits",
+                              "path": "/api/v1/users/identity-document/123456789012"
+                            }
+                            """
+                                                            )
+                                                    }
+                                            )
+                                    ),
+                                    @ApiResponse(
+                                            responseCode = "404",
+                                            description = "Not Found - User not found",
+                                            content = @Content(
+                                                    examples = {
+                                                            @ExampleObject(
+                                                                    name = "Scenario 1 - User does not exist",
+                                                                    summary = "Identity document valid but no user found",
+                                                                    value = """
+                            {
+                              "timestamp": "2024-01-15T10:30:00Z",
+                              "status": 404,
+                              "error": "Not Found",
+                              "message": "User not found with identity document: 9999999999",
+                              "path": "/api/v1/users/identity-document/9999999999"
+                            }
+                            """
+                                                            )
+                                                    }
+                                            )
+                                    ),
+                                    @ApiResponse(
+                                            responseCode = "500",
+                                            description = "Internal Server Error - Database or system error",
+                                            content = @Content(
+                                                    examples = {
+                                                            @ExampleObject(
+                                                                    name = "Scenario 1 - Database connection failure",
+                                                                    summary = "Error connecting to database",
+                                                                    value = """
+                            {
+                              "timestamp": "2024-01-15T10:30:00Z",
+                              "status": 500,
+                              "error": "Internal Server Error",
+                              "message": "Database connection failed",
+                              "path": "/api/v1/users/identity-document/1234567890"
+                            }
+                            """
+                                                            )
+                                                    }
+                                            )
+                                    )
+                            }
+                    )
             )
+
     })
     public RouterFunction<ServerResponse> userRouter(UserHandler handler) {
-        return route(POST("/api/v1/users"), handler::registerUser);
+        return route(POST("/api/v1/users"), handler::registerUser)
+                .andRoute(GET("/api/v1/users/identity-document/{identityDocument}"),
+                        handler::getUserByIdentityDocument);
     }
 }
