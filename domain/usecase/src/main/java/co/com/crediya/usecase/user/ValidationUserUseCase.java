@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
-
 public class ValidationUserUseCase {
 
     private final UserRepository userRepository;

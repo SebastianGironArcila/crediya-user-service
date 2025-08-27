@@ -6,6 +6,7 @@ import co.com.crediya.api.dto.CreateUserDTO;
 import co.com.crediya.api.mapper.UserDTOMapper;
 import co.com.crediya.model.user.User;
 import co.com.crediya.usecase.user.RegisterUserUseCase;
+import co.com.crediya.usecase.user.ValidationUserUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +22,11 @@ import java.time.LocalDate;
 
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {UserRouterRest.class, UserHandler.class, ValidationHandler.class})
+@ContextConfiguration(classes = {
+        UserRouterRest.class,
+        UserHandler.class,
+        ValidationHandler.class
+})
 @WebFluxTest
 @Import({CorsConfig.class, SecurityHeadersConfig.class})
 class ConfigTest {
@@ -31,6 +36,9 @@ class ConfigTest {
 
     @MockitoBean
     private RegisterUserUseCase registerUserUseCase;
+
+    @MockitoBean
+    private ValidationUserUseCase validationUserUseCase;
 
     @MockitoBean
     private UserDTOMapper userDTOMapper;
@@ -63,10 +71,8 @@ class ConfigTest {
                 .build();
 
         when(userDTOMapper.toModel(createUserDTO)).thenReturn(user);
-        when(registerUserUseCase.register(user,"")).thenReturn(Mono.just(user));
+        when(registerUserUseCase.register(user,"ADMINISTRADOR")).thenReturn(Mono.just(user));
     }
-
-
 
     @Test
     void securityHeadersShouldBeApplied() {

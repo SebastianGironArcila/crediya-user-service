@@ -80,4 +80,31 @@ class UserDataRepositoryAdapterTest {
                 .expectNext(true)
                 .verifyComplete();
     }
+
+    @Test
+    void shouldFindUserByIdentityDocument() {
+        String identityDocument = "123456789";
+
+        when(repository.findByIdentityDocument(identityDocument)).thenReturn(Mono.just(userData));
+        when(mapper.map(userData, User.class)).thenReturn(user);
+
+        Mono<User> result = adapter.findByIdentityDocument(identityDocument);
+
+        StepVerifier.create(result)
+                .expectNext(user)
+                .verifyComplete();
+    }
+
+    @Test
+    void shouldReturnEmptyWhenUserNotFoundByIdentityDocument() {
+        String identityDocument = "999999999";
+
+        when(repository.findByIdentityDocument(identityDocument)).thenReturn(Mono.empty());
+
+        Mono<User> result = adapter.findByIdentityDocument(identityDocument);
+
+        StepVerifier.create(result)
+                .verifyComplete();
+    }
+
 }
