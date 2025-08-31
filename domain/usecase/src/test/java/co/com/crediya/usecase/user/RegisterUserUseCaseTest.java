@@ -1,7 +1,9 @@
 package co.com.crediya.usecase.user;
 
-import co.com.crediya.model.common.ex.BusinessException;
+import co.com.crediya.model.common.exception.BusinessException;
+import co.com.crediya.model.role.Role;
 import co.com.crediya.model.user.User;
+import co.com.crediya.model.role.gateways.RoleRepository;
 import co.com.crediya.model.user.gateways.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +13,7 @@ import org.mockito.MockitoAnnotations;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static org.mockito.Mockito.when;
@@ -23,7 +26,12 @@ class RegisterUserUseCaseTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private RoleRepository roleRepository;
+
     private User validUser;
+    private Role adminRole;
+    private final String roleName = "ADMINISTRADOR";
 
     @BeforeEach
     void setUp() {
@@ -36,87 +44,98 @@ class RegisterUserUseCaseTest {
                 .address("Calle 123")
                 .phone("3001234567")
                 .email("dahiana@example.com")
-                .baseSalary(2000.0)
+                .baseSalary(BigDecimal.valueOf(2000.0))
+                .roleId(1)
                 .build();
-    }
 
-    @Test
-    void mustFailWhenFirstNameIsNull() {
-        User user = validUser.toBuilder().firstName(null).build();
-
-        StepVerifier.create(registerUserUseCase.register(user))
-                .expectErrorMatches(e -> e instanceof BusinessException &&
-                        ((BusinessException) e).getCode().equals(BusinessException.Type.FIRSTNAME_REQUIRED.name()))
-                .verify();
-    }
-
-    @Test
-    void mustFailWhenLastNameIsNull() {
-        User user = validUser.toBuilder().lastName(null).build();
-
-        StepVerifier.create(registerUserUseCase.register(user))
-                .expectErrorMatches(e -> e instanceof BusinessException &&
-                        ((BusinessException) e).getCode().equals(BusinessException.Type.LASTNAME_REQUIRED.name()))
-                .verify();
-    }
-
-    @Test
-    void mustFailWhenEmailIsNull() {
-        User user = validUser.toBuilder().email(null).build();
-
-        StepVerifier.create(registerUserUseCase.register(user))
-                .expectErrorMatches(e -> e instanceof BusinessException &&
-                        ((BusinessException) e).getCode().equals(BusinessException.Type.EMAIL_REQUIRED.name()))
-                .verify();
-    }
-
-    @Test
-    void mustFailWhenEmailIsInvalid() {
-        User user = validUser.toBuilder().email("invalid-email").build();
-
-        StepVerifier.create(registerUserUseCase.register(user))
-                .expectErrorMatches(e -> e instanceof BusinessException &&
-                        ((BusinessException) e).getCode().equals(BusinessException.Type.INVALID_FORMAT.name()))
-                .verify();
-    }
-
-    @Test
-    void mustFailWhenSalaryIsInvalid() {
-        User user = validUser.toBuilder().baseSalary(-100.0).build();
-
-        StepVerifier.create(registerUserUseCase.register(user))
-                .expectErrorMatches(e -> e instanceof BusinessException &&
-                        ((BusinessException) e).getCode().equals(BusinessException.Type.INVALID_SALARY.name()))
-                .verify();
-    }
-
-    @Test
-    void mustFailWhenBirthDateIsNull() {
-        User user = validUser.toBuilder().birthDate(null).build();
-
-        StepVerifier.create(registerUserUseCase.register(user))
-                .expectErrorMatches(e -> e instanceof BusinessException &&
-                        ((BusinessException) e).getCode().equals(BusinessException.Type.BIRTHDATE_REQUIRED.name()))
-                .verify();
+        adminRole = Role.builder()
+                .id(1)
+                .name("ADMINISTRADOR")
+                .description("Rol con permisos de administración")
+                .build();
     }
 
     @Test
     void mustFailWhenEmailAlreadyExists() {
         when(userRepository.existsByEmail(validUser.getEmail())).thenReturn(Mono.just(true));
 
-        StepVerifier.create(registerUserUseCase.register(validUser))
+        StepVerifier.create(registerUserUseCase.register(validUser, roleName))
                 .expectErrorMatches(e -> e instanceof BusinessException &&
                         ((BusinessException) e).getCode().equals(BusinessException.Type.EMAIL_ALREADY_REGISTERED.name()))
                 .verify();
     }
 
     @Test
+    void mustFailWhenRoleNotFound() {
+        when(userRepository.existsByEmail(validUser.getEmail())).thenReturn(Mono.just(false));
+        when(roleRepository.findByName(roleName)).thenReturn(Mono.empty());
+
+        StepVerifier.create(registerUserUseCase.register(validUser, roleName))
+                .expectErrorMatches(e -> e instanceof BusinessException &&
+                        ((BusinessException) e).getCode().equals(BusinessException.Type.ROLE_NOT_FOUND.name()))
+                .verify();
+    }
+
+    @Test
     void mustRegisterSuccessfully() {
         when(userRepository.existsByEmail(validUser.getEmail())).thenReturn(Mono.just(false));
-        when(userRepository.save(validUser)).thenReturn(Mono.just(validUser));
+        when(roleRepository.findByName(roleName)).thenReturn(Mono.just(adminRole));
 
-        StepVerifier.create(registerUserUseCase.register(validUser))
-                .expectNextMatches(user -> user.equals(validUser))
+        User userWithRole = validUser.toBuilder()
+                .roleId(adminRole.getId())
+                .build();
+
+        when(userRepository.save(userWithRole)).thenReturn(Mono.just(userWithRole));
+
+        StepVerifier.create(registerUserUseCase.register(validUser, roleName))
+                .expectNextMatches(savedUser ->
+                        savedUser.equals(userWithRole) &&
+                                savedUser.getRoleId().equals(adminRole.getId())
+                )
+                .verifyComplete();
+    }
+
+    @Test
+    void mustSetRoleIdBeforeSaving() {
+        when(userRepository.existsByEmail(validUser.getEmail())).thenReturn(Mono.just(false));
+        when(roleRepository.findByName(roleName)).thenReturn(Mono.just(adminRole));
+
+        User expectedUser = validUser.toBuilder()
+                .roleId(adminRole.getId())
+                .build();
+
+        when(userRepository.save(expectedUser)).thenReturn(Mono.just(expectedUser));
+
+        StepVerifier.create(registerUserUseCase.register(validUser, roleName))
+                .expectNextMatches(user ->
+                        user.getRoleId() != null &&
+                                user.getRoleId().equals(adminRole.getId())
+                )
+                .verifyComplete();
+    }
+
+    @Test
+    void mustHandleDifferentRoles() {
+        String differentRoleName = "FARMER";
+        Role userRole = Role.builder()
+                .id(2)
+                .name("FARMER")
+                .description("farmer description")
+                .build();
+
+        when(userRepository.existsByEmail(validUser.getEmail())).thenReturn(Mono.just(false));
+        when(roleRepository.findByName(differentRoleName)).thenReturn(Mono.just(userRole));
+
+        User userWithUserRole = validUser.toBuilder()
+                .roleId(userRole.getId())
+                .build();
+
+        when(userRepository.save(userWithUserRole)).thenReturn(Mono.just(userWithUserRole));
+
+        StepVerifier.create(registerUserUseCase.register(validUser, differentRoleName))
+                .expectNextMatches(savedUser ->
+                        savedUser.getRoleId().equals(userRole.getId())
+                )
                 .verifyComplete();
     }
 }

@@ -1,17 +1,14 @@
-package co.com.crediya.model.common.ex;
+package co.com.crediya.model.common.exception;
 
 import java.util.function.Supplier;
 
 public class BusinessException extends ApplicationException {
 
     public enum Type {
-        FIRSTNAME_REQUIRED("First name is required"),
-        LASTNAME_REQUIRED("Last name is required"),
-        EMAIL_REQUIRED("Email is required"),
-        INVALID_FORMAT("Invalid email format"),
-        INVALID_SALARY("Salary must be between 0 and 15,000,000"),
         EMAIL_ALREADY_REGISTERED("Email is already registered"),
-        BIRTHDATE_REQUIRED("Birth date is required");
+        ROLE_NOT_FOUND("Role not found"),
+        USER_NOT_FOUND("User not found");
+
 
         private final String message;
 
