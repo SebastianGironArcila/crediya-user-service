@@ -57,7 +57,8 @@ class ConfigTest {
                 "juan.perez@test.com",
                 "100200300",
                 BigDecimal.valueOf(1500000),
-                "ADMINISTRADOR"
+                "ADMINISTRADOR",
+                "pasword"
         );
 
         user = User.builder()

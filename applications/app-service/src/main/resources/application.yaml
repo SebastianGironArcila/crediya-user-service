@@ -39,3 +39,8 @@ springdoc:
     path: "/api-docs"
   swagger-ui:
     path: "/swagger-ui"
+
+
+jwt:
+  secret: "tuClaveSuperSecretaDeAlMenos32CaracteresAqui123!"
+  expiration: 3600000

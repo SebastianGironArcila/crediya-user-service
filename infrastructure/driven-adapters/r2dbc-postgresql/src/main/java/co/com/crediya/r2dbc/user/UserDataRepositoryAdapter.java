@@ -52,4 +52,13 @@ public class UserDataRepositoryAdapter extends ReactiveAdapterOperations<
                 .doOnNext(user -> log.debug("User found: {}", user.getId()))
                 .doOnError(error -> log.error("Error finding user by identity document: {}", error.getMessage()));
     }
+
+    @Override
+    public Mono<User> findByEmail(String email) {
+        log.debug("Finding user by email: {}", email);
+        return repository.findByEmail(email)
+                .map(this::toEntity)
+                .doOnNext(user -> log.debug("User found: {}", user.getId()))
+                .doOnError(error -> log.error("Error finding user by : {}", error.getMessage()));
+    }
 }

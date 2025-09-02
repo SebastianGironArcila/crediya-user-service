@@ -424,6 +424,7 @@ public class UserRouterRest {
     public RouterFunction<ServerResponse> userRouter(UserHandler handler) {
         return route(POST("/api/v1/users"), handler::registerUser)
                 .andRoute(GET("/api/v1/users/identity-document/{identityDocument}"),
-                        handler::getUserByIdentityDocument);
+                        handler::getUserByIdentityDocument)
+                .andRoute(POST("/api/v1/login"), handler::login);
     }
 }

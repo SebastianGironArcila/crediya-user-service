@@ -37,6 +37,10 @@ public record CreateUserDTO(
         BigDecimal baseSalary,
 
         @NotBlank(message = "Role is required")
-        String roleName
+        String roleName,
+
+        @NotBlank(message = "Password is required")
+        String password
+
 ) {
 }

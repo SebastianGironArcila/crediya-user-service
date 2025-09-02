@@ -518,6 +518,32 @@ class UserRouterRestTest {
 
 
     @Test
+    void whenPasswordIsBlank_thenReturnBadRequest() {
+        ConstraintViolation<?> violation = Mockito.mock(ConstraintViolation.class);
+        Path path = PathImpl.createPathFromString("password");
+
+        Mockito.when(violation.getPropertyPath()).thenReturn(path);
+        Mockito.when(violation.getMessage()).thenReturn("Password is requited");
+
+        Set<ConstraintViolation<?>> violations = Set.of(violation);
+
+        Mockito.when(validationHandler.validate(any(CreateUserDTO.class)))
+                .thenReturn(Mono.error(new ConstraintViolationException("Validation failed", violations)));
+
+        CreateUserDTO invalidDTO = validUserDTO.toBuilder().password("").build();
+
+        webTestClient.post()
+                .uri("/api/v1/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(invalidDTO)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error").isEqualTo("VALIDATION_FAILED")
+                .jsonPath("$.message[0]").isEqualTo("assword: Password is requited");
+    }
+
+    @Test
     void whenInternalError_thenReturnServerError() {
         UserIdentityDocumentDTO dto = new UserIdentityDocumentDTO("1234567890");
 
