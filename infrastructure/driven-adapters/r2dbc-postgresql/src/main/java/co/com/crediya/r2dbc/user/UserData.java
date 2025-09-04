@@ -48,5 +48,5 @@ public class UserData {
     private Integer roleId;
 
     @Column("password")
-    private Integer password;
+    private String password;
 }

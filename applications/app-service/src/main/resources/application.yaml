@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8081
 spring:
   application:
     name: "Authentication"
@@ -43,4 +43,5 @@ springdoc:
 
 jwt:
   secret: "tuClaveSuperSecretaDeAlMenos32CaracteresAqui123!"
-  expiration: 3600000
+  expiration: 7200000
+

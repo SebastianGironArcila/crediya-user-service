@@ -9,4 +9,5 @@ public interface TokenService
     String getEmailFromToken(String token);
     Long getUserIdFromToken(String token);
     Long getRoleIdFromToken(String token);
+    String getRoleNameFromToken(String token);
 }

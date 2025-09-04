@@ -1,6 +1,7 @@
 package co.com.crediya.usecase.user;
 
 
+import co.com.crediya.model.common.exception.BusinessException;
 import co.com.crediya.model.common.gateways.PasswordEnconderService;
 import co.com.crediya.model.common.gateways.TokenService;
 import co.com.crediya.model.user.gateways.UserRepository;
@@ -16,15 +17,14 @@ public class LoginUserUseCase {
 
     public Mono<String> authenticate(String email, String rawPassword) {
         return userRepository.findByEmail(email)
-                .switchIfEmpty(Mono.error(new RuntimeException("Invalid credentials")))
+                .switchIfEmpty(Mono.error(BusinessException.Type.INVALID_CREDENTIALS.build()))
                 .flatMap(user -> {
                     if (passwordEnconderService.matches(rawPassword, user.getPassword())) {
                         return Mono.just(tokenService.generateToken(user));
                     } else {
-                        return Mono.error(new RuntimeException("Invalid credentials"));
+                        return Mono.error(BusinessException.Type.INVALID_CREDENTIALS.build());
                     }
                 });
     }
-
 
 }

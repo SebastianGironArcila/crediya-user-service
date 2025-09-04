@@ -1,4 +1,4 @@
-package co.com.crediya.api.config;
+package co.com.crediya.api.security;
 
 import co.com.crediya.model.common.gateways.TokenService;
 import co.com.crediya.model.user.User;
@@ -29,15 +29,19 @@ public class JwtTokenProvider implements TokenService {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
+    @Override
     public String generateToken(User user) {
         try {
             Date now = new Date();
             Date expiryDate = new Date(now.getTime() + jwtExpiration);
 
+            String roleName = mapRoleIdToRoleName(user.getRoleId());
+
             return Jwts.builder()
                     .subject(user.getEmail())
                     .claim("userId", user.getId())
-                    .claim("roleId", user.getRoleId()) // Agregué roleId para autorización
+                    .claim("roleId", user.getRoleId())
+                    .claim("roleName", roleName)
                     .issuedAt(now)
                     .expiration(expiryDate)
                     .signWith(getSigningKey(), Jwts.SIG.HS256)
@@ -49,6 +53,18 @@ public class JwtTokenProvider implements TokenService {
         }
     }
 
+    private String mapRoleIdToRoleName(Integer roleId) {
+        return switch (roleId) {
+            case 1 -> "ADMINISTRATOR";
+            case 2 -> "CUSTOMER";
+            case 3 -> "ANALYST";
+            case 4 -> "MANAGER";
+            case 5 -> "SUPPORT";
+            default -> "CUSTOMER";
+        };
+    }
+
+    @Override
     public boolean validateToken(String token) {
         try {
             Jwts.parser()
@@ -70,18 +86,27 @@ public class JwtTokenProvider implements TokenService {
         return false;
     }
 
+    @Override
     public String getEmailFromToken(String token) {
         return getClaimsFromToken(token).getSubject();
     }
 
+    @Override
     public Long getUserIdFromToken(String token) {
         Object userId = getClaimsFromToken(token).get("userId");
         return userId != null ? Long.valueOf(userId.toString()) : null;
     }
 
+    @Override
     public Long getRoleIdFromToken(String token) {
         Object roleId = getClaimsFromToken(token).get("roleId");
         return roleId != null ? Long.valueOf(roleId.toString()) : null;
+    }
+
+    @Override
+    public String getRoleNameFromToken(String token) {
+        Object roleName = getClaimsFromToken(token).get("roleName");
+        return roleName != null ? roleName.toString() : null;
     }
 
     private Claims getClaimsFromToken(String token) {

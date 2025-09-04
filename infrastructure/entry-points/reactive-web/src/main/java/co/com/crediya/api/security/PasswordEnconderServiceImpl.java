@@ -1,4 +1,4 @@
-package co.com.crediya.api.config;
+package co.com.crediya.api.security;
 
 import co.com.crediya.model.common.gateways.PasswordEnconderService;
 import lombok.AllArgsConstructor;

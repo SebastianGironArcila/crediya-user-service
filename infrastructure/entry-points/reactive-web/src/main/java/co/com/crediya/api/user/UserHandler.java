@@ -3,6 +3,7 @@ package co.com.crediya.api.user;
 import co.com.crediya.api.config.ValidationHandler;
 import co.com.crediya.api.dto.CreateUserDTO;
 import co.com.crediya.api.dto.LoginRequestDTO;
+import co.com.crediya.api.dto.LoginResponseDTO;
 import co.com.crediya.api.dto.UserIdentityDocumentDTO;
 import co.com.crediya.api.mapper.UserDTOMapper;
 import co.com.crediya.model.user.User;
@@ -72,7 +73,7 @@ public class UserHandler {
                 .flatMap(validationHandler::validate)
                 .flatMap(loginRequestDTO ->
                         loginUserUseCase.authenticate(loginRequestDTO.email(), loginRequestDTO.password()))
-                .flatMap(loginResponse -> ServerResponse.ok().bodyValue(loginResponse))
+                .flatMap(token -> ServerResponse.ok().bodyValue(new LoginResponseDTO(token)))
                 .doOnError(error -> log.error("Authentication failed: {}", error.getMessage()))
                 .doOnSuccess(response -> log.debug("Authentication process completed"));
     }
