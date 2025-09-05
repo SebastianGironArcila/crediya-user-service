@@ -1,6 +1,8 @@
 package co.com.crediya.api.user;
 
 import co.com.crediya.api.dto.CreateUserDTO;
+import co.com.crediya.api.dto.LoginRequestDTO;
+import co.com.crediya.api.dto.LoginResponseDTO;
 import co.com.crediya.api.dto.UserDTO;
 import co.com.crediya.model.user.User;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springdoc.core.annotations.RouterOperation;
 import org.springdoc.core.annotations.RouterOperations;
 import org.springframework.context.annotation.Bean;
@@ -36,6 +39,7 @@ public class UserRouterRest {
                             summary = "Register a new ADMINISTRATOR",
                             description = "Registers a new ADMINISTRATOR with personal data: first name, last name, birth date, address, phone, email, identity document, base salary and role. " +
                                     "Email must be unique and all required fields must be provided with valid formats.",
+                            security = { @SecurityRequirement(name = "bearerAuth") },
                             requestBody = @RequestBody(
                                     required = true,
                                     description = "ADMINISTRATOR registration data",
@@ -271,6 +275,7 @@ public class UserRouterRest {
                             operationId = "getUserByIdentityDocument",
                             summary = "Get user by identity document",
                             description = "Retrieves user information by identity document number. The identity document is validated (must be 6-10 digits) before searching. Used by other microservices to validate user existence for credit applications.",
+                            security = { @SecurityRequirement(name = "bearerAuth") },
                             parameters = {
                                     @Parameter(
                                             name = "identityDocument",
@@ -412,6 +417,158 @@ public class UserRouterRest {
                               "path": "/api/v1/users/identity-document/1234567890"
                             }
                             """
+                                                            )
+                                                    }
+                                            )
+                                    )
+                            }
+                    )
+            ),
+            @RouterOperation(
+                    path = "/api/v1/login",
+                    beanClass = UserHandler.class,
+                    beanMethod = "login",
+                    operation = @Operation(
+                            operationId = "login",
+                            summary = "Authenticate a user and generate access token",
+                            description = "Authenticates a user using email and password. If credentials are valid, returns a JWT token to be used for subsequent requests. If invalid, returns 401 Unauthorized.",
+                            requestBody = @RequestBody(
+                                    required = true,
+                                    description = "Login credentials",
+                                    content = @Content(
+                                            schema = @Schema(implementation = LoginRequestDTO.class),
+                                            examples = {
+                                                    @ExampleObject(
+                                                            name = "Scenario 1 - Successful login",
+                                                            summary = "Valid credentials",
+                                                            value = """
+                                                        {
+                                                          "email": "john.doe@email.com",
+                                                          "password": "securePassword123"
+                                                        }
+                                                        """
+                                                    ),
+                                                    @ExampleObject(
+                                                            name = "Scenario 2 - Invalid email format",
+                                                            summary = "Incorrect email format",
+                                                            value = """
+                                                        {
+                                                          "email": "invalid-email",
+                                                          "password": "anyPassword"
+                                                        }
+                                                        """
+                                                    ),
+                                                    @ExampleObject(
+                                                            name = "Scenario 3 - Missing password",
+                                                            summary = "Password not provided",
+                                                            value = """
+                                                        {
+                                                          "email": "john.doe@email.com",
+                                                          "password": ""
+                                                        }
+                                                        """
+                                                    )
+                                            }
+                                    )
+                            ),
+                            responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "Login successful - JWT token generated",
+                                            content = @Content(
+                                                    schema = @Schema(implementation = LoginResponseDTO.class),
+                                                    examples = {
+                                                            @ExampleObject(
+                                                                    name = "Success response",
+                                                                    value = """
+                                                                {
+                                                                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6..."
+                                                                }
+                                                                """
+                                                            )
+                                                    }
+                                            )
+                                    ),
+                                    @ApiResponse(
+                                            responseCode = "400",
+                                            description = "Bad Request - Validation failed",
+                                            content = @Content(
+                                                    examples = {
+                                                            @ExampleObject(
+                                                                    name = "Invalid email format",
+                                                                    value = """
+                                                                {
+                                                                  "timestamp": "2024-01-15T10:30:00Z",
+                                                                  "status": 400,
+                                                                  "error": "Bad Request",
+                                                                  "message": "Invalid format email",
+                                                                  "path": "/api/v1/login"
+                                                                }
+                                                                """
+                                                            ),
+                                                            @ExampleObject(
+                                                                    name = "Missing password",
+                                                                    value = """
+                                                                {
+                                                                  "timestamp": "2024-01-15T10:30:00Z",
+                                                                  "status": 400,
+                                                                  "error": "Bad Request",
+                                                                  "message": "Password is required",
+                                                                  "path": "/api/v1/login"
+                                                                }
+                                                                """
+                                                            )
+                                                    }
+                                            )
+                                    ),
+                                    @ApiResponse(
+                                            responseCode = "401",
+                                            description = "Unauthorized - Invalid credentials",
+                                            content = @Content(
+                                                    examples = {
+                                                            @ExampleObject(
+                                                                    name = "Wrong password",
+                                                                    value = """
+                                                                {
+                                                                  "timestamp": "2024-01-15T10:30:00Z",
+                                                                  "status": 401,
+                                                                  "error": "Unauthorized",
+                                                                  "message": "Invalid credentials",
+                                                                  "path": "/api/v1/login"
+                                                                }
+                                                                """
+                                                            ),
+                                                            @ExampleObject(
+                                                                    name = "Email not found",
+                                                                    value = """
+                                                                {
+                                                                  "timestamp": "2024-01-15T10:30:00Z",
+                                                                  "status": 401,
+                                                                  "error": "Unauthorized",
+                                                                  "message": "Invalid credentials",
+                                                                  "path": "/api/v1/login"
+                                                                }
+                                                                """
+                                                            )
+                                                    }
+                                            )
+                                    ),
+                                    @ApiResponse(
+                                            responseCode = "500",
+                                            description = "Internal Server Error - System error",
+                                            content = @Content(
+                                                    examples = {
+                                                            @ExampleObject(
+                                                                    name = "Database failure",
+                                                                    value = """
+                                                                {
+                                                                  "timestamp": "2024-01-15T10:30:00Z",
+                                                                  "status": 500,
+                                                                  "error": "Internal Server Error",
+                                                                  "message": "Database connection failed",
+                                                                  "path": "/api/v1/login"
+                                                                }
+                                                                """
                                                             )
                                                     }
                                             )

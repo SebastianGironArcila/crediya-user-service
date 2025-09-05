@@ -36,6 +36,7 @@ class ValidationHandlerTest {
                 .identityDocument("100200300")
                 .baseSalary(BigDecimal.valueOf(1500000))
                 .roleName("ADMINISTRADOR")
+                .password("password")
                 .build();
 
         StepVerifier.create(validationHandler.validate(validDto))

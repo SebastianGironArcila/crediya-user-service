@@ -1,5 +1,7 @@
 package co.com.crediya.config;
 
+import co.com.crediya.model.common.gateways.PasswordEnconderService;
+import co.com.crediya.model.common.gateways.TokenService;
 import co.com.crediya.model.role.gateways.RoleRepository;
 import co.com.crediya.model.user.gateways.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -47,6 +49,13 @@ public class UseCasesConfigTest {
         public RoleRepository roleRepository() {
             return Mockito.mock(RoleRepository.class);
         }
+
+        @Bean
+        public TokenService tokenService() {return Mockito.mock(TokenService.class); }
+
+        @Bean
+        public PasswordEnconderService passwordEnconderService() {return Mockito.mock(PasswordEnconderService.class); }
+
     }
 
     static class MyUseCase {

@@ -99,6 +99,7 @@ tasks.register('jacocoMergedReport', JacocoReport) {
                 '**/api/config/**/*',
                 '**/api/mapper/**/*',
                 '**/r2dbc/config/**/*',
+                '**/api/security/**/*',
         ])
     }
     executionData.setFrom project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
