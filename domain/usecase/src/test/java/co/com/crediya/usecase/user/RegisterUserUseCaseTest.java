@@ -1,6 +1,7 @@
 package co.com.crediya.usecase.user;
 
 import co.com.crediya.model.common.exception.BusinessException;
+import co.com.crediya.model.common.gateways.PasswordEnconderService;
 import co.com.crediya.model.role.Role;
 import co.com.crediya.model.user.User;
 import co.com.crediya.model.role.gateways.RoleRepository;
@@ -29,6 +30,9 @@ class RegisterUserUseCaseTest {
     @Mock
     private RoleRepository roleRepository;
 
+    @Mock
+    private PasswordEnconderService passwordEnconderService; // 👈 mock faltante
+
     private User validUser;
     private Role adminRole;
     private final String roleName = "ADMINISTRADOR";
@@ -44,6 +48,7 @@ class RegisterUserUseCaseTest {
                 .address("Calle 123")
                 .phone("3001234567")
                 .email("dahiana@example.com")
+                .password("rawPassword") // 👈 agrega password inicial
                 .baseSalary(BigDecimal.valueOf(2000.0))
                 .roleId(1)
                 .build();
@@ -80,9 +85,11 @@ class RegisterUserUseCaseTest {
     void mustRegisterSuccessfully() {
         when(userRepository.existsByEmail(validUser.getEmail())).thenReturn(Mono.just(false));
         when(roleRepository.findByName(roleName)).thenReturn(Mono.just(adminRole));
+        when(passwordEnconderService.encode("rawPassword")).thenReturn("encodedPassword"); // 👈 simulamos encriptación
 
         User userWithRole = validUser.toBuilder()
                 .roleId(adminRole.getId())
+                .password("encodedPassword") // 👈 aseguramos encoded
                 .build();
 
         when(userRepository.save(userWithRole)).thenReturn(Mono.just(userWithRole));
@@ -90,7 +97,8 @@ class RegisterUserUseCaseTest {
         StepVerifier.create(registerUserUseCase.register(validUser, roleName))
                 .expectNextMatches(savedUser ->
                         savedUser.equals(userWithRole) &&
-                                savedUser.getRoleId().equals(adminRole.getId())
+                                savedUser.getRoleId().equals(adminRole.getId()) &&
+                                savedUser.getPassword().equals("encodedPassword")
                 )
                 .verifyComplete();
     }
@@ -99,9 +107,11 @@ class RegisterUserUseCaseTest {
     void mustSetRoleIdBeforeSaving() {
         when(userRepository.existsByEmail(validUser.getEmail())).thenReturn(Mono.just(false));
         when(roleRepository.findByName(roleName)).thenReturn(Mono.just(adminRole));
+        when(passwordEnconderService.encode("rawPassword")).thenReturn("encodedPassword");
 
         User expectedUser = validUser.toBuilder()
                 .roleId(adminRole.getId())
+                .password("encodedPassword")
                 .build();
 
         when(userRepository.save(expectedUser)).thenReturn(Mono.just(expectedUser));
@@ -109,7 +119,8 @@ class RegisterUserUseCaseTest {
         StepVerifier.create(registerUserUseCase.register(validUser, roleName))
                 .expectNextMatches(user ->
                         user.getRoleId() != null &&
-                                user.getRoleId().equals(adminRole.getId())
+                                user.getRoleId().equals(adminRole.getId()) &&
+                                user.getPassword().equals("encodedPassword")
                 )
                 .verifyComplete();
     }
@@ -125,16 +136,19 @@ class RegisterUserUseCaseTest {
 
         when(userRepository.existsByEmail(validUser.getEmail())).thenReturn(Mono.just(false));
         when(roleRepository.findByName(differentRoleName)).thenReturn(Mono.just(userRole));
+        when(passwordEnconderService.encode("rawPassword")).thenReturn("encodedPassword");
 
         User userWithUserRole = validUser.toBuilder()
                 .roleId(userRole.getId())
+                .password("encodedPassword")
                 .build();
 
         when(userRepository.save(userWithUserRole)).thenReturn(Mono.just(userWithUserRole));
 
         StepVerifier.create(registerUserUseCase.register(validUser, differentRoleName))
                 .expectNextMatches(savedUser ->
-                        savedUser.getRoleId().equals(userRole.getId())
+                        savedUser.getRoleId().equals(userRole.getId()) &&
+                                savedUser.getPassword().equals("encodedPassword")
                 )
                 .verifyComplete();
     }

@@ -10,6 +10,10 @@ dependencies {
     runtimeOnly('org.springframework.boot:spring-boot-devtools')
     testImplementation 'com.tngtech.archunit:archunit:1.4.1'
     testImplementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'org.flywaydb:flyway-core:11.12.0'
+    implementation 'org.postgresql:postgresql:42.7.3'
+    implementation 'org.flywaydb:flyway-database-postgresql:11.12.0'
+
 }
 
 tasks.register('explodedJar', Copy) {

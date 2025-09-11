@@ -26,4 +26,5 @@ public class User {
     private BigDecimal baseSalary;
     private String address;
     private Integer roleId;
+    private String password;
 }

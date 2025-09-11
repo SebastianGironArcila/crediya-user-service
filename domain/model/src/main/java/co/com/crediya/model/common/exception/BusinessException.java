@@ -7,7 +7,9 @@ public class BusinessException extends ApplicationException {
     public enum Type {
         EMAIL_ALREADY_REGISTERED("Email is already registered"),
         ROLE_NOT_FOUND("Role not found"),
-        USER_NOT_FOUND("User not found");
+        USER_NOT_FOUND("User not found"),
+        INVALID_CREDENTIALS("Invalid credentials");
+
 
 
         private final String message;

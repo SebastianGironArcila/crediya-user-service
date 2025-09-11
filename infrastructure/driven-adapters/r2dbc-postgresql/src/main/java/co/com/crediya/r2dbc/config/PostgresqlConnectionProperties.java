@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record PostgresqlConnectionProperties(
         String host,
         Integer port,
-        String dbname,
+        String database,
         String schema,
         String username,
         String password) {

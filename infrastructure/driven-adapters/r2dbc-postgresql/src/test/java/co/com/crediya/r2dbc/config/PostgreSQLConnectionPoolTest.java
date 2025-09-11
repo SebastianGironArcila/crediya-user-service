@@ -30,7 +30,7 @@ class PostgreSQLConnectionPoolTest {
 
         when(properties.host()).thenReturn("localhost");
         when(properties.port()).thenReturn(5432);
-        when(properties.dbname()).thenReturn("dbaName");
+        when(properties.database()).thenReturn("database");
         when(properties.schema()).thenReturn("schema");
         when(properties.username()).thenReturn("username");
         when(properties.password()).thenReturn("password");

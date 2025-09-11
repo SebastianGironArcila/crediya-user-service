@@ -107,4 +107,33 @@ class UserDataRepositoryAdapterTest {
                 .verifyComplete();
     }
 
+    @Test
+    void shouldFindUserByEmail() {
+        String email = "dahiana@example.com";
+
+        when(repository.findByEmail(email)).thenReturn(Mono.just(userData));
+        when(mapper.map(userData, User.class)).thenReturn(user);
+
+        Mono<User> result = adapter.findByEmail(email);
+
+        StepVerifier.create(result)
+                .expectNext(user)
+                .verifyComplete();
+    }
+
+    @Test
+    void shouldReturnEmptyWhenUserNotFoundByEmail() {
+        String email = "notfound@example.com";
+
+        when(repository.findByEmail(email)).thenReturn(Mono.empty());
+
+        Mono<User> result = adapter.findByEmail(email);
+
+        StepVerifier.create(result)
+                .verifyComplete();
+    }
+
+
 }
+
+

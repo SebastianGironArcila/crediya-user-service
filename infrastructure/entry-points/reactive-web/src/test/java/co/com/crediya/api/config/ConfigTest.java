@@ -5,6 +5,7 @@ import co.com.crediya.api.user.UserRouterRest;
 import co.com.crediya.api.dto.CreateUserDTO;
 import co.com.crediya.api.mapper.UserDTOMapper;
 import co.com.crediya.model.user.User;
+import co.com.crediya.usecase.user.LoginUserUseCase;
 import co.com.crediya.usecase.user.RegisterUserUseCase;
 import co.com.crediya.usecase.user.ValidationUserUseCase;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +29,7 @@ import static org.mockito.Mockito.when;
         ValidationHandler.class
 })
 @WebFluxTest
-@Import({CorsConfig.class, SecurityHeadersConfig.class})
+@Import({CorsConfig.class, SecurityHeadersConfig.class, SecurityConfigTest.class})
 class ConfigTest {
 
     @Autowired
@@ -39,6 +40,9 @@ class ConfigTest {
 
     @MockitoBean
     private ValidationUserUseCase validationUserUseCase;
+
+    @MockitoBean
+    private LoginUserUseCase  loginUserUseCase;
 
     @MockitoBean
     private UserDTOMapper userDTOMapper;
@@ -57,7 +61,8 @@ class ConfigTest {
                 "juan.perez@test.com",
                 "100200300",
                 BigDecimal.valueOf(1500000),
-                "ADMINISTRADOR"
+                "ADMINISTRATOR",
+                "pasword"
         );
 
         user = User.builder()
@@ -68,14 +73,17 @@ class ConfigTest {
                 .phone(createUserDTO.phone())
                 .email(createUserDTO.email())
                 .baseSalary(createUserDTO.baseSalary())
+                .roleId(1)
+                .password("password")
                 .build();
 
         when(userDTOMapper.toModel(createUserDTO)).thenReturn(user);
-        when(registerUserUseCase.register(user,"ADMINISTRADOR")).thenReturn(Mono.just(user));
+        when(registerUserUseCase.register(user,"ADMINISTRATOR")).thenReturn(Mono.just(user));
     }
 
     @Test
     void securityHeadersShouldBeApplied() {
+
         webTestClient.get()
                 .uri("/api/v1/users")
                 .exchange()
