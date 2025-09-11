@@ -59,7 +59,8 @@ public class UserRouterRest {
                                                                         "email": "john.doe@email.com",
                                                                         "identityDocument": "1234567890",
                                                                         "baseSalary": 2500000.00,
-                                                                        "roleName": "ADMINISTRATOR"
+                                                                        "roleName": "ADMINISTRATOR",
+                                                                        "password": "password"
                                                                     }
                                                                     """
                                                     ),
@@ -76,7 +77,8 @@ public class UserRouterRest {
                                                                         "email": "invalid-email-format",
                                                                         "identityDocument": "0987654321",
                                                                         "baseSalary": 3000000.00,
-                                                                        "roleName": "ADMINISTRATOR"
+                                                                        "roleName": "ADMINISTRATOR",
+                                                                         "password": "password"
                                                                     }
                                                                     """
                                                     ),
@@ -93,7 +95,8 @@ public class UserRouterRest {
                                                                         "email": "robert.johnson@email.com",
                                                                         "identityDocument": "1122334455",
                                                                         "baseSalary": -500000.00,
-                                                                        "roleName": "ADMINISTRATOR"
+                                                                        "roleName": "ADMINISTRATOR",
+                                                                         "password": "password"
                                                                     }
                                                                     """
                                                     ),
@@ -110,7 +113,8 @@ public class UserRouterRest {
                                                                         "email": "sarah.wilson@email.com",
                                                                         "identityDocument": "5566778899",
                                                                         "baseSalary": 4000000.00,
-                                                                        "roleName": ""
+                                                                        "roleName": "",
+                                                                         "password": "password"
                                                                     }
                                                                     """
                                                     ),
@@ -127,7 +131,8 @@ public class UserRouterRest {
                                                                         "email": "john.doe@email.com",
                                                                         "identityDocument": "9988776655",
                                                                         "baseSalary": 3500000.00,
-                                                                        "roleName": "ADMINISTRATOR"
+                                                                        "roleName": "ADMINISTRATOR",
+                                                                         "password": "password"
                                                                     }
                                                                     """
                                                     ),
@@ -144,7 +149,8 @@ public class UserRouterRest {
                                                                         "email": "emily.davis@email.com",
                                                                         "identityDocument": "4433221100",
                                                                         "baseSalary": 2800000.00,
-                                                                        "roleName": "FARMER"
+                                                                        "roleName": "FARMER",
+                                                                         "password": "password"
                                                                     }
                                                                     """
                                                     )
@@ -443,8 +449,8 @@ public class UserRouterRest {
                                                             summary = "Valid credentials",
                                                             value = """
                                                         {
-                                                          "email": "john.doe@email.com",
-                                                          "password": "securePassword123"
+                                                          "email": "admin@example.com",
+                                                          "password": "password"
                                                         }
                                                         """
                                                     ),

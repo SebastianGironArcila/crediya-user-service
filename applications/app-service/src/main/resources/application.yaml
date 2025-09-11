@@ -11,6 +11,20 @@ spring:
       path: "/h2"
   profiles:
     include: null
+  flyway:
+    url: jdbc:postgresql://postgres-db:5432/crediya
+    user: postgres
+    password: postgres
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validateMigrationNaming: true
+    table: flyway_schema_history_auth
+    default-schema: public
+  datasource:
+    url: jdbc:postgresql://postgres-db:5432/crediya
+    username: postgres
+    password: postgres
 management:
   endpoints:
     web:
@@ -24,8 +38,8 @@ cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
 adapters:
   postgres:
-    database: "postgres"
-    host: "localhost"
+    database: "crediya"
+    host: "postgres-db"
     port: 5432
     username: "postgres"
     password: "postgres"
@@ -34,14 +48,15 @@ adapters:
       initial-size: 12
       max-size: 15
       max-idle-time: 10
+
 springdoc:
   api-docs:
-    path: "/api-docs"
+    path: /v3/api-docs
   swagger-ui:
-    path: "/swagger-ui"
+    path: /swagger-ui.html
+    disable-swagger-default-url: true
 
 
 jwt:
   secret: "tuClaveSuperSecretaDeAlMenos32CaracteresAqui123!"
   expiration: 7200000
-

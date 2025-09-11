@@ -27,11 +27,12 @@ public class SecurityConfig {
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(
-                                "http://localhost:8081/webjars/swagger-ui/index.html",
+                                "/swagger-ui.html",
                                 "/swagger-ui/**",
-                                "/api-docs/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/webjars/**"
                         ).permitAll()
+                        .pathMatchers("/actuator/**").permitAll()
                         .pathMatchers("/api/v1/login").permitAll()
                         .pathMatchers("/api/v1/users").hasRole("ADMINISTRATOR")
                         .pathMatchers("/api/v1/users/identity-document/**").hasAnyRole("ADMINISTRATOR", "ADVISOR","CUSTOMER")

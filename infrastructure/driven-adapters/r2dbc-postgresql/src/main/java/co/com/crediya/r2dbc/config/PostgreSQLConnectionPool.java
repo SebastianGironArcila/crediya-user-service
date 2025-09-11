@@ -21,7 +21,7 @@ public class PostgreSQLConnectionPool {
         PostgresqlConnectionConfiguration dbConfiguration = PostgresqlConnectionConfiguration.builder()
                 .host(properties.host())
                 .port(properties.port())
-                .database(properties.dbname())
+                .database(properties.database())
                 .schema(properties.schema())
                 .username(properties.username())
                 .password(properties.password())
@@ -37,6 +37,4 @@ public class PostgreSQLConnectionPool {
 
         return new ConnectionPool(poolConfiguration);
     }
-
-
 }
