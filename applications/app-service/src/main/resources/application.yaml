@@ -12,9 +12,9 @@ spring:
   profiles:
     include: null
   flyway:
-    url: jdbc:postgresql://postgres-db:5432/crediya
-    user: postgres
-    password: postgres
+    url: "jdbc:postgresql://crediya-db.cdaqau60wx86.us-east-1.rds.amazonaws.com:5432/crediya"
+    user: "postgres"
+    password: ":(^34tiE6eE,h]oU"
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
@@ -22,9 +22,9 @@ spring:
     table: flyway_schema_history_auth
     default-schema: public
   datasource:
-    url: jdbc:postgresql://postgres-db:5432/crediya
-    username: postgres
-    password: postgres
+    url: "jdbc:postgresql://crediya-db.cdaqau60wx86.us-east-1.rds.amazonaws.com:5432/crediya"
+    username: "postgres"
+    password: ":(^34tiE6eE,h]oU"
 management:
   endpoints:
     web:
@@ -36,13 +36,14 @@ management:
         enabled: true
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
+
 adapters:
   postgres:
     database: "crediya"
-    host: "postgres-db"
+    host: "crediya-db.cdaqau60wx86.us-east-1.rds.amazonaws.com"
     port: 5432
     username: "postgres"
-    password: "postgres"
+    password: ":(^34tiE6eE,h]oU"
     schema: "public"
     pool:
       initial-size: 12
